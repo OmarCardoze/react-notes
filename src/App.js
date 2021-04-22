@@ -3,10 +3,11 @@ import Note from './components/Note'
 import Notification from './components/Notification'
 import noteService from './services/notes'
 import loginService from './services/login'
+import LoginForm from './components/LoginForm'
+import NoteForm from './components/NoteForm'
 
 const App = () => {
   const [notes, setNotes] = useState([])
-  const [newNote, setNewNote] = useState('')
   const [showAll, setShowAll] = useState(true)
   const [errorMessage, setErrorMessage] = useState(null)
 
@@ -26,7 +27,7 @@ const App = () => {
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedNoteAppUser')
 
-    if(loggedUserJSON){
+    if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
       setUser(user)
       noteService.setToken(user.token)
@@ -39,20 +40,14 @@ const App = () => {
     window.localStorage.removeItem('loggedNoteAppUser')
   }
 
-  const addNote = (event) => {
-    event.preventDefault()
-    const noteObject = {
-      content: newNote,
-      important: Math.random() > 0.5,
-    }
+  const addNote = (noteObject) => {
 
     // se le pasa el token para autorizar crear la nota
-    
+
     noteService
       .create(noteObject)
       .then(returnedNote => {
         setNotes(notes.concat(returnedNote))
-        setNewNote('')
       })
   }
 
@@ -76,10 +71,6 @@ const App = () => {
       })
   }
 
-  const handleNoteChange = (event) => {
-    setNewNote(event.target.value)
-  }
-
   const handleLogin = async (event) => {
     event.preventDefault()
 
@@ -93,7 +84,7 @@ const App = () => {
         'loggedNoteAppUser', JSON.stringify(user)
       )
       noteService.setToken(user.token)
-      
+
       setUser(user)
       setUsername('')
       setPassword('')
@@ -110,25 +101,6 @@ const App = () => {
     ? notes
     : notes.filter(note => note.important)
 
-  const renderCreateNoteForm = () => (
-    <>
-    <form onSubmit={addNote}>
-      <input
-        placeholder='Add a new note content'
-        value={newNote}
-        onChange={handleNoteChange}
-      />
-      <button type="submit">save</button>
-    </form>
-
-    <div>
-    <button onClick={handleLogout}>
-      Cerrar session
-    </button>
-    </div>
-    </>
-  )
-
   return (
     <div>
       <h1>MyNotes</h1>
@@ -136,8 +108,17 @@ const App = () => {
 
       {
         user
-          ? renderCreateNoteForm()
-          : renderLoginForm()
+          ? <NoteForm
+            addNote={addNote}
+            handleLogout={handleLogout}
+          />
+          : <LoginForm
+            username={username}
+            password={password}
+            handleUsernameChange={(event) => setUsername(event.target.value)}
+            handlePasswordChange={(event) => setPassword(event.target.value)}
+            handleSubmit={handleLogin}
+          />
       }
 
       <div>
